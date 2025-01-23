@@ -38,40 +38,50 @@ public class MessengerController : ControllerBase
     {
         try
         {
-            // 打印接收到的 Webhook 消息
-            Console.WriteLine($"Incoming Webhook: {request}");
+            // 打印原始的 Webhook 請求
+            Console.WriteLine($"Incoming Webhook: {request.GetRawText()}");
 
-            // 解析 JSON
+            // 嘗試反序列化
             var root = JsonSerializer.Deserialize<WebhookRequest>(request.GetRawText());
-            if (root?.Entry != null)
+            if (root == null)
             {
-                foreach (var entry in root.Entry)
+                Console.WriteLine("Failed to parse JSON: Deserialized object is null.");
+                return BadRequest("Invalid JSON format.");
+            }
+
+            if (root.Entry == null || root.Entry.Count == 0)
+            {
+                Console.WriteLine("No entries found in the Webhook payload.");
+                return BadRequest("No entries in Webhook payload.");
+            }
+
+            foreach (var entry in root.Entry)
+            {
+                foreach (var messaging in entry.Messaging)
                 {
-                    foreach (var messaging in entry.Messaging)
+                    var senderId = messaging.Sender?.Id;
+                    var text = messaging.Message?.Text;
+
+                    if (!string.IsNullOrEmpty(senderId) && !string.IsNullOrEmpty(text))
                     {
-                        var senderId = messaging.Sender?.Id;
-                        var text = messaging.Message?.Text;
+                        Console.WriteLine($"Message received from {senderId}: {text}");
 
-                        if (!string.IsNullOrEmpty(senderId) && !string.IsNullOrEmpty(text))
-                        {
-                            Console.WriteLine($"Message received from {senderId}: {text}");
+                        // 準備回覆消息
+                        var replyMessage = $"PSID:{senderId}, 傳送的訊息為：{text}";
 
-                            // 準備回覆消息
-                            var replyMessage = $"PSID:{senderId}, 傳送的訊息為：{text}";
-
-                            // 發送回覆
-                            await _messengerService.SendMessage(senderId, replyMessage);
-                        }
+                        // 發送回覆
+                        await _messengerService.SendMessage(senderId, replyMessage);
                     }
                 }
             }
-            Console.WriteLine("Finished posting");
+
+            Console.WriteLine("Finished processing Webhook.");
             return Ok();
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error processing incoming message: {ex.Message}");
-            return StatusCode(500, "Error processing incoming message.");
+            Console.WriteLine($"Error processing Webhook: {ex.Message}");
+            return StatusCode(500, "An error occurred while processing Webhook.");
         }
     }
 }
