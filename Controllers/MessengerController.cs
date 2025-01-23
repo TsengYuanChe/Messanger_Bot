@@ -66,6 +66,7 @@ public class MessengerController : ControllerBase
 
                         // 準備回覆
                         var replyMessage = $"PSID:{senderId}, 傳送的訊息為：{text}";
+                        Console.WriteLine($"Going to reply: {replyMessage}");
 
                         // 發送回覆
                         await _messengerService.SendMessage(senderId, replyMessage);
