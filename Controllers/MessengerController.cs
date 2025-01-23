@@ -34,14 +34,14 @@ public class MessengerController : ControllerBase
 
     // 接收訊息
     [HttpPost("webhook")]
-    public IActionResult Webhook([FromBody] JsonElement request)
+    public async Task<IActionResult> Webhook([FromBody] JsonElement request)
     {
         try
         {
-            // Log incoming request
+            // 打印接收到的 Webhook 消息
             Console.WriteLine($"Incoming Webhook: {request}");
 
-            // Parse JSON
+            // 解析 JSON
             var root = JsonSerializer.Deserialize<WebhookRequest>(request.GetRawText());
             if (root?.Entry != null)
             {
@@ -55,11 +55,17 @@ public class MessengerController : ControllerBase
                         if (!string.IsNullOrEmpty(senderId) && !string.IsNullOrEmpty(text))
                         {
                             Console.WriteLine($"Message received from {senderId}: {text}");
-                            // You can call your service here to send a reply
+
+                            // 準備回覆消息
+                            var replyMessage = $"PSID:{senderId}, 傳送的訊息為：{text}";
+
+                            // 發送回覆
+                            await _messengerService.SendMessage(senderId, replyMessage);
                         }
                     }
                 }
             }
+
             return Ok();
         }
         catch (Exception ex)
