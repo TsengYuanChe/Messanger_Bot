@@ -1,3 +1,4 @@
+using System.Text.Json;
 using Microsoft.AspNetCore.Mvc;
 
 [ApiController]
@@ -33,26 +34,75 @@ public class MessengerController : ControllerBase
 
     // 接收訊息
     [HttpPost("webhook")]
-    public IActionResult ReceiveMessage([FromBody] dynamic request)
+    public IActionResult Webhook([FromBody] JsonElement request)
     {
-        Console.WriteLine($"Incoming Webhook: {request}");
-        
-        // 簡單解析訊息並回應
         try
         {
-            var message = request.entry[0].messaging[0].message.text.ToString();
-            var senderId = request.entry[0].messaging[0].sender.id.ToString();
+            // Log incoming request
+            Console.WriteLine($"Incoming Webhook: {request}");
 
-            Console.WriteLine($"Message received from {senderId}: {message}");
+            // Parse JSON
+            var root = JsonSerializer.Deserialize<WebhookRequest>(request.GetRawText());
+            if (root?.Entry != null)
+            {
+                foreach (var entry in root.Entry)
+                {
+                    foreach (var messaging in entry.Messaging)
+                    {
+                        var senderId = messaging.Sender?.Id;
+                        var text = messaging.Message?.Text;
 
-            // 呼叫服務回應訊息
-            _messengerService.SendMessage(senderId, $"收到您的訊息：{message}");
+                        if (!string.IsNullOrEmpty(senderId) && !string.IsNullOrEmpty(text))
+                        {
+                            Console.WriteLine($"Message received from {senderId}: {text}");
+                            // You can call your service here to send a reply
+                        }
+                    }
+                }
+            }
+            return Ok();
         }
         catch (Exception ex)
         {
             Console.WriteLine($"Error processing incoming message: {ex.Message}");
+            return StatusCode(500, "Error processing incoming message.");
         }
-
-        return Ok();
     }
+}
+
+public class WebhookRequest
+{
+    public string? Object { get; set; }
+    public List<Entry>? Entry { get; set; }
+}
+
+public class Entry
+{
+    public long Time { get; set; }
+    public string? Id { get; set; }
+    public List<Messaging>? Messaging { get; set; }
+}
+
+public class Messaging
+{
+    public Sender? Sender { get; set; }
+    public Recipient? Recipient { get; set; }
+    public long Timestamp { get; set; }
+    public Message? Message { get; set; }
+}
+
+public class Sender
+{
+    public string? Id { get; set; }
+}
+
+public class Recipient
+{
+    public string? Id { get; set; }
+}
+
+public class Message
+{
+    public string? Mid { get; set; }
+    public string? Text { get; set; }
 }
