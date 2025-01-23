@@ -65,7 +65,7 @@ public class MessengerController : ControllerBase
                     }
                 }
             }
-
+            Console.WriteLine("Finished posting");
             return Ok();
         }
         catch (Exception ex)
