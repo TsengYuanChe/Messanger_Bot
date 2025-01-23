@@ -1,0 +1,12 @@
+{
+  "Version": 1,
+  "Hash": "2TXHIGUJbBfTVLQ5rN09omrUwy5p/MDVGZieUSFgAwo=",
+  "Source": "MessengerBot",
+  "BasePath": "_content/MessengerBot",
+  "Mode": "Default",
+  "ManifestType": "Build",
+  "ReferencedProjectsConfiguration": [],
+  "DiscoveryPatterns": [],
+  "Assets": [],
+  "Endpoints": []
+}
