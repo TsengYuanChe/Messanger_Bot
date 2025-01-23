@@ -22,6 +22,7 @@ public class MessengerController : ControllerBase
 
         if (mode == "subscribe" && verifyToken == ExpectedVerifyToken)
         {
+            Response.ContentType = "text/plain";
             Console.WriteLine("Webhook verification succeeded.");
             return Ok(challenge); // 返回 challenge 值以完成驗證
         }
