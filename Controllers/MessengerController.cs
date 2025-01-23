@@ -13,18 +13,21 @@ public class MessengerController : ControllerBase
 
     // Webhook 驗證端點
     [HttpGet("webhook")]
-    public IActionResult VerifyWebhook([FromQuery] string hub_mode, [FromQuery] string hub_verify_token, [FromQuery] string hub_challenge)
+    public IActionResult VerifyWebhook(
+        [FromQuery(Name = "hub.mode")] string mode,
+        [FromQuery(Name = "hub.verify_token")] string verifyToken,
+        [FromQuery(Name = "hub.challenge")] string challenge)
     {
-        const string verifyToken = "my_messenger_bot_token"; // 與 appsettings.json 的 VerifyToken 保持一致
+        const string ExpectedVerifyToken = "adam880614"; // 替換為您設定的驗證權杖
 
-        if (hub_mode == "subscribe" && hub_verify_token == verifyToken)
+        if (mode == "subscribe" && verifyToken == ExpectedVerifyToken)
         {
             Console.WriteLine("Webhook verification succeeded.");
-            return Ok(hub_challenge); // 返回 hub.challenge 完成驗證
+            return Ok(challenge); // 返回 challenge 值以完成驗證
         }
 
         Console.WriteLine("Webhook verification failed.");
-        return Unauthorized("Invalid verify token.");
+        return Unauthorized();
     }
 
     // 接收訊息
